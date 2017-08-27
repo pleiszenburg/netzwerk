@@ -26,8 +26,8 @@ release:
 	-rm dist/*
 	-rm -r src/*.egg-info
 	python setup.py sdist bdist_wheel
-	gpg --detach-sign -a dist/literatur*.whl
-	gpg --detach-sign -a dist/literatur*.tar.gz
+	gpg --detach-sign -a dist/netzwerk*.whl
+	gpg --detach-sign -a dist/netzwerk*.tar.gz
 
 upload:
 	for filename in $$(ls dist/*.tar.gz dist/*.whl) ; do \
