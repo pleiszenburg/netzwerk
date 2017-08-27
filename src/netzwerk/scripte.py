@@ -29,7 +29,10 @@ specific language governing rights and limitations under the License.
 # IMPORT
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from .const import *
+import json
+import sys
+
+from .const import KEY_NAME
 from .netzwerk import netzwerk
 
 
@@ -39,4 +42,21 @@ from .netzwerk import netzwerk
 
 def renderer():
 
-	print('Hallo!')
+	datei_name = sys.argv[1]
+
+	f = open(datei_name, 'r')
+	datei_inhalt = f.read()
+	f.close()
+
+	netzwerk_liste = json.loads(datei_inhalt)
+	netzwerk_obj = netzwerk({KEY_NAME: file_name})
+
+	for element in netzwerk_obj:
+		if type(element) == list:
+			nuklear.verbinde_komponenten(element)
+		elif type(element) == dict:
+			nuklear.erstelle_komponente(element)
+		else:
+			raise # TODO
+
+	nuklear.rendere_netzwerk(datei_name + '.svg')
