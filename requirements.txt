@@ -1,0 +1,6 @@
+setuptools
+wheel
+pytest
+twine
+Sphinx
+sphinx_rtd_theme
