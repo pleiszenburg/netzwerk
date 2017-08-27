@@ -6,7 +6,7 @@ NETZWERK
 Computer network renderer
 https://github.com/pleiszenburg/netzwerk
 
-	src/netzwerk/__init__.py: Module init
+	src/netzwerk/scripte.py: Eingangspunkte für Scripte
 
 	Copyright (C) 2017 Sebastian M. Ernst <ernst@pleiszenburg.de>
 
@@ -31,4 +31,12 @@ specific language governing rights and limitations under the License.
 
 from .const import *
 from .netzwerk import netzwerk
-from .scripte import renderer as script_renderer
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# ROUTINEN
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def renderer():
+
+	print('Hallo!')

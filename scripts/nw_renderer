@@ -6,7 +6,7 @@ NETZWERK
 Computer network renderer
 https://github.com/pleiszenburg/netzwerk
 
-	src/netzwerk/__init__.py: Module init
+	scripts/nw_renderer.py: Rendert Netzwerke in Form von JSON-Dateien
 
 	Copyright (C) 2017 Sebastian M. Ernst <ernst@pleiszenburg.de>
 
@@ -29,6 +29,13 @@ specific language governing rights and limitations under the License.
 # IMPORT
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from .const import *
-from .netzwerk import netzwerk
-from .scripte import renderer as script_renderer
+from netzwerk import script_renderer
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# RENDERER
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+if __name__ == "__main__":
+
+	script_renderer()
