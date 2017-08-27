@@ -6,7 +6,7 @@ NETZWERK
 Computer network renderer
 https://github.com/pleiszenburg/netzwerk
 
-	src/netzwerk/uebergang.py: Übergänge wie Dosen
+	src/netzwerk/uebergang.py: Übergänge wie Dosen, Löcher in Wänden ...
 
 	Copyright (C) 2017 Sebastian M. Ernst <ernst@pleiszenburg.de>
 
