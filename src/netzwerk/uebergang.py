@@ -33,6 +33,7 @@ import copy
 
 from .const import *
 from .element import element
+from .schnittstelle import schnittstelle_ethernet
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

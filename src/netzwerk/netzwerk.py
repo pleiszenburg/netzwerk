@@ -30,7 +30,22 @@ specific language governing rights and limitations under the License.
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from .const import *
+from .darstellung import darstellung_ebene
 from .element import element
+from .komponente import (
+	komponente_computer_arbeitsplatz,
+	komponente_computer_drucker,
+	komponente_computer_switch_hub,
+	komponente_computer_kopflos,
+	komponente_computer_smartphone,
+	komponente_computer_switch
+	)
+from .uebergang import (
+	uebergang_dose,
+	uebergang_loch,
+	uebergang_vorbereitet,
+	verbindung_patchfeld
+	)
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

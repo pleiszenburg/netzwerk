@@ -31,6 +31,7 @@ specific language governing rights and limitations under the License.
 
 from .const import *
 from .element import element
+from .schnittstelle import schnittstelle_ethernet
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
