@@ -45,18 +45,17 @@ def renderer():
 	datei_name = sys.argv[1]
 
 	f = open(datei_name, 'r')
-	datei_inhalt = f.read()
+	netzwerk_liste = json.load(f)
 	f.close()
 
-	netzwerk_liste = json.loads(datei_inhalt)
-	netzwerk_obj = netzwerk({KEY_NAME: file_name})
+	netzwerk_obj = netzwerk({KEY_NAME: datei_name})
 
-	for element in netzwerk_obj:
+	for element in netzwerk_liste:
 		if type(element) == list:
-			nuklear.verbinde_komponenten(element)
+			netzwerk_obj.verbinde_komponenten(element)
 		elif type(element) == dict:
-			nuklear.erstelle_komponente(element)
+			netzwerk_obj.erstelle_komponente(element)
 		else:
 			raise # TODO
 
-	nuklear.rendere_netzwerk(datei_name + '.svg')
+	netzwerk_obj.rendere_netzwerk(datei_name + '.svg')

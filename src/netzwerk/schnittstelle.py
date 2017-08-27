@@ -114,6 +114,9 @@ class schnittstelle_ethernet(schnittstelle):
 			self.p[KEY_POSITION] = KEY_UNBEKANNT
 		if KEY_MAC not in self.p.keys():
 			self.p[KEY_MAC] = DEFAULT_MAC
+		else:
+			if type(self.p[KEY_MAC]) == str:
+				self.p[KEY_MAC] = [int(item, 16) for item in self.p[KEY_MAC].split(':')]
 		if KEY_IPV4 not in self.p.keys():
 			self.p[KEY_IPV4] = {}
 		if not self.p[KEY_PASSIV]:
