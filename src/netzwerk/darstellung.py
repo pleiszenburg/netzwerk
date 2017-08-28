@@ -400,7 +400,7 @@ class darstellung_ebene(darstellung):
 		for switch in self.p[KEY_SWITCHES]:
 			if self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] < switch.svg[KEY_HOEHE]:
 				self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] = switch.svg[KEY_HOEHE]
-		# HOEHE: Inter - Anzahl der Inter-Switch-Verbindungen mal Abstand
+		# HOEHE: Inter - Anzahl der Inter-Switch-Verbindungen plus Switch-Patchfeld-Verbindungen mal Abstand
 		self.p[KEY_VERTIKAL][KEY_INTER] = 0 # TODO
 		# HOEHE: Dosen - höchste gewinnt
 		for dosen in self.p[KEY_DOSEN]:
