@@ -394,14 +394,22 @@ class darstellung_ebene(darstellung):
 
 	def __bestimme_mindesten_platzbedarf_in_mir__(self):
 
+		def analysiere_dose_zu_patchfeld_verbindungen():
+
+
+
+			return 0
+
 		# HOEHE: Meta - entspricht Schriftgröße
 		self.p[KEY_VERTIKAL][KEY_META] = PARAM_RAUM_SCHRIFTGROESSE
 		# HOEHE: Switches - höchster gewinnt
 		for switch in self.p[KEY_SWITCHES]:
 			if self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] < switch.svg[KEY_HOEHE]:
 				self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] = switch.svg[KEY_HOEHE]
+
 		# HOEHE: Inter - Anzahl der Inter-Switch-Verbindungen plus Switch-Patchfeld-Verbindungen mal Abstand
 		self.p[KEY_VERTIKAL][KEY_INTER] = 0 # TODO
+
 		# HOEHE: Dosen - höchste gewinnt
 		for dosen in self.p[KEY_DOSEN]:
 			if self.p[KEY_VERTIKAL][KEY_DOSENEBENE] < dosen.svg[KEY_HOEHE]:
