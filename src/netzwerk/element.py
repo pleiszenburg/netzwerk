@@ -53,7 +53,6 @@ class element(object):
 	def ersetze_parameter(self, vorlage, parameter):
 
 		for key in list(parameter.keys()):
-
 			vorlage = vorlage.replace('{{' + key + '}}', str(parameter[key]))
 
 		return vorlage
