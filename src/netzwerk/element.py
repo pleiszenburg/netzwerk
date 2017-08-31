@@ -68,22 +68,7 @@ class element(object):
 
 	def __sortiere_liste_von_elementen__(self, liste_elemente, schluessel):
 
-		namen = []
-		for gegenstand in liste_elemente:
-			namen.append(gegenstand.p[schluessel])
-
-		namen.sort()
-
-		neue_liste = []
-		for name in namen:
-			for gegenstand in liste_elemente:
-				if name == gegenstand.p[schluessel]:
-					neue_liste.append(gegenstand)
-					break
-
-		liste_elemente[:] = []
-		for gegenstand in neue_liste:
-			liste_elemente.append(gegenstand)
+		sorted(liste_elemente, key = lambda gegenstand: gegenstand.p[schluessel])
 
 
 	def __vervollstaendige_svg__(self, svg, globaler_kopf = False):
