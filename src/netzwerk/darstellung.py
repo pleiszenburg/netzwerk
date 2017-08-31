@@ -123,7 +123,7 @@ class darstellung_ebene(darstellung):
 
 		# Verbindungen zeichnen
 		if self.p[KEY_HIERARCHIEEBENE] == PARAM_EBENEN[0]:
-			self.__test_zeichne_verbindungen__(self.svg[KEY_SVG])
+			self.__zeichne_verbindungen__(self.svg[KEY_SVG])
 
 
 
@@ -132,59 +132,157 @@ class darstellung_ebene(darstellung):
 			self.__vervollstaendige_svg__(self.svg[KEY_SVG], True)
 
 
-	def __test_zeichne_verbindungen__(self, svg):
+	def __baue_struktur_baum__(self):
 
-		linie = '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="%d" stroke-linecap="round" />'
+		self.p[KEY_BAUM] = {}
 
-		for verbindung in self.p[KEY_VERBINDUNGEN]:
+		# TODO rekursiv mit PARAM_EBENEN
+		for komponente in list(self.p[KEY_KOMPONENTEN].keys()):
 
-			orientierungen = []
-			for index in range(0, 2):
-				orientierungen.append(verbindung[KEY_VERBINDUNG][index][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_ORIENTIERUNG])
+			ort = self.p[KEY_KOMPONENTEN][komponente].p[KEY_ORT]
 
-			# Klassische 90°-Ecke in Kabel
-			if (
-				orientierungen[0] in [KEY_OBEN, KEY_UNTEN] and orientierungen[1] in [KEY_LINKS, KEY_RECHTS]
-				) or (
-				orientierungen[0] in [KEY_LINKS, KEY_RECHTS] and orientierungen[1] in [KEY_OBEN, KEY_UNTEN]
-				):
+			if ort[KEY_STANDORT] != '' and ort[KEY_STANDORT] not in self.p[KEY_BAUM].keys():
+				self.p[KEY_BAUM][ort[KEY_STANDORT]] = {}
+			if ort[KEY_HAUS] != '' and ort[KEY_HAUS] not in self.p[KEY_BAUM][ort[KEY_STANDORT]].keys():
+				self.p[KEY_BAUM][ort[KEY_STANDORT]][ort[KEY_HAUS]] = {}
+			if ort[KEY_RAUM] != '' and ort[KEY_RAUM] not in self.p[KEY_BAUM][ort[KEY_STANDORT]][ort[KEY_HAUS]].keys():
+				self.p[KEY_BAUM][ort[KEY_STANDORT]][ort[KEY_HAUS]][ort[KEY_RAUM]] = {}
 
-				if orientierungen[0] in [KEY_OBEN, KEY_UNTEN]:
-					punkte = [
-						[0, 0, 0, 1],
-						[0, 1, 1, 1],
-						]
+
+	def __bestimme_mindesten_platzbedarf_in_mir__(self):
+
+		def analysiere_dose_zu_patchfeld_verbindungen():
+
+
+
+			return 0
+
+		# HOEHE: Meta - entspricht Schriftgröße
+		self.p[KEY_VERTIKAL][KEY_META] = PARAM_RAUM_SCHRIFTGROESSE
+		# HOEHE: Switches - höchster gewinnt
+		for switch in self.p[KEY_SWITCHES]:
+			if self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] < switch.svg[KEY_HOEHE]:
+				self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] = switch.svg[KEY_HOEHE]
+
+		# HOEHE: Inter - Anzahl der Inter-Switch-Verbindungen plus Switch-Patchfeld-Verbindungen mal Abstand
+		self.p[KEY_VERTIKAL][KEY_INTER] = 0 # TODO
+
+		# HOEHE: Dosen - höchste gewinnt
+		for dosen in self.p[KEY_DOSEN]:
+			if self.p[KEY_VERTIKAL][KEY_DOSENEBENE] < dosen.svg[KEY_HOEHE]:
+				self.p[KEY_VERTIKAL][KEY_DOSENEBENE] = dosen.svg[KEY_HOEHE]
+		# HOEHE: Komponenten / Kinder - Summe ihrer Höhe plus Summe-1 mal Abstand
+		for kind in self.p[KEY_KINDER]:
+			self.p[KEY_VERTIKAL][KEY_KOMPONENTENEBENE] += kind.svg[KEY_HOEHE]
+		if len(self.p[KEY_KINDER]) > 1:
+			self.p[KEY_VERTIKAL][KEY_KOMPONENTENEBENE] += (len(self.p[KEY_KINDER]) - 1) * PARAM_ABSTAND
+
+		# BREITE: Knicke - Anzahl der Dosen mal Abstand
+		self.p[KEY_HORIZONTAL][KEY_KNICKE] = len(self.p[KEY_AUSGAENGE]) * PARAM_ABSTAND
+		# BREITE: Switches - Summe ihrer Breite plus Summe-1 mal Abstand
+		for switch in self.p[KEY_SWITCHES]:
+			self.p[KEY_HORIZONTAL][KEY_SWITCHEBENE] += switch.svg[KEY_BREITE]
+		if len(self.p[KEY_SWITCHES]) > 1:
+			self.p[KEY_HORIZONTAL][KEY_SWITCHEBENE] += (len(self.p[KEY_SWITCHES]) - 1) * PARAM_ABSTAND
+		# BREITE: Inter - Anzahl der Inter-Kinder-Verbindungen mal Abstand
+		self.p[KEY_HORIZONTAL][KEY_INTER] = 0 # TODO
+		# BREITE: Komponenten / Kinder - breitestes gewinnt
+		for kind in self.p[KEY_KINDER]:
+			if self.p[KEY_HORIZONTAL][KEY_KOMPONENTENEBENE] < kind.svg[KEY_BREITE]:
+				self.p[KEY_HORIZONTAL][KEY_KOMPONENTENEBENE] = kind.svg[KEY_BREITE]
+
+		# Horizontale Werte in globaler Tabelle notieren
+		for spalte in list(self.p[KEY_HORIZONTAL].keys()):
+			if self.p[KEY_MAX][self.p[KEY_HIERARCHIEEBENE]][spalte] < self.p[KEY_HORIZONTAL][spalte]:
+				self.p[KEY_MAX][self.p[KEY_HIERARCHIEEBENE]][spalte] = self.p[KEY_HORIZONTAL][spalte]
+
+
+	def __erstelle_meine_kinder__(self):
+
+		for ort in list(self.p[KEY_BAUM].keys()):
+			self.p[KEY_KINDER].append(darstellung_ebene({
+				KEY_NAME: ort,
+				KEY_ELTERN: self.p[KEY_NAME],
+				KEY_HIERARCHIEEBENE: PARAM_EBENEN[PARAM_EBENEN.index(self.p[KEY_HIERARCHIEEBENE]) + 1],
+				KEY_BAUM: self.p[KEY_BAUM][ort],
+				KEY_KOMPONENTEN: self.p[KEY_KOMPONENTEN],
+				KEY_VERBINDUNGEN: self.p[KEY_VERBINDUNGEN],
+				KEY_MAX: self.p[KEY_MAX]
+				}))
+
+
+	def __finde_meine_komponenten__(self):
+
+		# Durch alle Komponenten des Netzwerkes laufen
+		for komponente in list(self.p[KEY_KOMPONENTEN].keys()):
+
+			# Liegt dieses Element in meiner Ebene?
+			if self.p[KEY_KOMPONENTEN][komponente].p[KEY_HIERARCHIEEBENE] == self.p[KEY_HIERARCHIEEBENE]:
+
+				# Prüfung des Ortes ...
+				richtiger_ort = False
+
+				# Globales Element
+				if self.p[KEY_NAME] == PARAM_EBENEN[0]:
+
+					# Immer ein Treffer
+					richtiger_ort = True
+
+				# Element mit Standort
 				else:
-					punkte = [
-						[0, 0, 1, 0],
-						[1, 0, 1, 1]
-						]
 
-				for index in punkte:
-					svg.append(linie % (
-						verbindung[KEY_VERBINDUNG][index[0]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
-						verbindung[KEY_VERBINDUNG][index[1]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
-						verbindung[KEY_VERBINDUNG][index[2]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
-						verbindung[KEY_VERBINDUNG][index[3]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
-						'#FF0000', 2
-						))
+					# Gibt es die Ortsebene?
+					if self.p[KEY_HIERARCHIEEBENE] in self.p[KEY_KOMPONENTEN][komponente].p[KEY_ORT].keys():
 
-			# Ein direktes Kabel - Rückfalloption für unbekannte Knick-Sequenzen
-			else:
+						# Richtiger Ort?
+						if self.p[KEY_KOMPONENTEN][komponente].p[KEY_ORT][self.p[KEY_HIERARCHIEEBENE]] == self.p[KEY_NAME]:
 
-				svg.append(linie % (
-					verbindung[KEY_VERBINDUNG][0][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
-					verbindung[KEY_VERBINDUNG][0][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
-					verbindung[KEY_VERBINDUNG][1][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
-					verbindung[KEY_VERBINDUNG][1][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
-					'#FF0000', 2
-					))
+							# Treffer
+							richtiger_ort = True
+
+				# Falls der Ort stimmt ...
+				if richtiger_ort:
+
+					# Switches, Hubs ... ?
+					if self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] in [KEY_SWITCH, KEY_HUB]: # TODO zuordnen
+
+						# In die Liste
+						self.p[KEY_SWITCHES].append(self.p[KEY_KOMPONENTEN][komponente])
+
+					# Ausgänge wie Dosen?
+					elif self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] in [KEY_DOSE, KEY_LOCH, KEY_VORBEREITET]: # TODO zuordnen
+
+						# Ist es eine Dose in der untersten Hierarchie-Ebene?
+						if self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] == KEY_DOSE and self.p[KEY_HIERARCHIEEBENE] != PARAM_EBENEN[-1]:
+
+							# In die Liste der Dosen
+							self.p[KEY_DOSEN].append(self.p[KEY_KOMPONENTEN][komponente])
+
+						else:
+
+							# Sonst in die Liste der Ausgänge
+							self.p[KEY_AUSGAENGE].append(self.p[KEY_KOMPONENTEN][komponente])
+
+					# Computer, Kopflos, ...
+					elif self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] in [KEY_ARBEITSPLATZ, KEY_KOPFLOS, KEY_DRUCKER, KEY_SMARTPHONE]: # TODO zuordnen
+
+						# In die Liste der KINDER (!)
+						self.p[KEY_KINDER].append(self.p[KEY_KOMPONENTEN][komponente])
+
+					# Sonstiges
+					else:
+
+						pp(komponente.p)
+						raise
 
 
-	def __zeichne_schnittstellen__(self, svg):
+	def __horizontaler_platz_felder__(self):
 
-		for ding in (self.p[KEY_SWITCHES] + self.p[KEY_DOSEN] + self.p[KEY_KINDER] + self.p[KEY_AUSGAENGE]):
-			ding.__zeichne_schnittstellen__(svg)
+		self.p[KEY_MAX] = {}
+		for ebene in PARAM_EBENEN:
+			self.p[KEY_MAX].update({ebene: {}})
+			for parameter in list(self.p[KEY_HORIZONTAL].keys()):
+				self.p[KEY_MAX][ebene][parameter] = 0
 
 
 	def __korrigiere_positionen__(self):
@@ -193,35 +291,6 @@ class darstellung_ebene(darstellung):
 			for dimension in [KEY_X, KEY_Y]:
 				ding.svg[dimension] += self.svg[dimension]
 			ding.__korrigiere_positionen__()
-
-
-	def __rendere_svg_global__(self):
-
-		# Eine Liste aller Objekte der Klasse Ebene aufstellen
-		ebenen_liste = []
-		self.__liste_mich_und_meine_kinder__(ebenen_liste)
-
-		# Alle Räume einer Hierarchie-Ebene rendern, über Ortsgrenzen hinweg, und dann nach oben steigen
-		for index, hierarchieebene in reversed(list(enumerate(PARAM_EBENEN))):
-
-			# Über alle Objekte der Klasse Ebene laufen - Platzbedarf bestimmen
-			for ebene in ebenen_liste:
-
-				# Ebenen der betreffenden Hierarchie-Stufe herausfischen
-				if ebene.p[KEY_HIERARCHIEEBENE] == hierarchieebene:
-
-					# Ebene rendern
-					ebene.__bestimme_mindesten_platzbedarf_in_mir__()
-
-			# Über alle Objekte der Klasse Ebene laufen - Rendern
-			for ebene in ebenen_liste:
-
-				# Ebenen der betreffenden Hierarchie-Stufe herausfischen
-				if ebene.p[KEY_HIERARCHIEEBENE] == hierarchieebene:
-
-					# Ebene rendern - falls sie etwas enthält
-					if len(ebene.p[KEY_SWITCHES]) > 0 or len(ebene.p[KEY_DOSEN]) > 0 or len(ebene.p[KEY_KINDER]) > 0 or len(ebene.p[KEY_AUSGAENGE]) > 0:
-						ebene.__rendere_mich_selbst__()
 
 
 	def __liste_mich_und_meine_kinder__(self, ebenen_liste):
@@ -383,140 +452,33 @@ class darstellung_ebene(darstellung):
 			self.svg[KEY_SVG] = svg
 
 
-	def __horizontaler_platz_felder__(self):
+	def __rendere_svg_global__(self):
 
-		self.p[KEY_MAX] = {}
-		for ebene in PARAM_EBENEN:
-			self.p[KEY_MAX].update({ebene: {}})
-			for parameter in list(self.p[KEY_HORIZONTAL].keys()):
-				self.p[KEY_MAX][ebene][parameter] = 0
+		# Eine Liste aller Objekte der Klasse Ebene aufstellen
+		ebenen_liste = []
+		self.__liste_mich_und_meine_kinder__(ebenen_liste)
 
+		# Alle Räume einer Hierarchie-Ebene rendern, über Ortsgrenzen hinweg, und dann nach oben steigen
+		for index, hierarchieebene in reversed(list(enumerate(PARAM_EBENEN))):
 
-	def __bestimme_mindesten_platzbedarf_in_mir__(self):
+			# Über alle Objekte der Klasse Ebene laufen - Platzbedarf bestimmen
+			for ebene in ebenen_liste:
 
-		def analysiere_dose_zu_patchfeld_verbindungen():
+				# Ebenen der betreffenden Hierarchie-Stufe herausfischen
+				if ebene.p[KEY_HIERARCHIEEBENE] == hierarchieebene:
 
+					# Ebene rendern
+					ebene.__bestimme_mindesten_platzbedarf_in_mir__()
 
+			# Über alle Objekte der Klasse Ebene laufen - Rendern
+			for ebene in ebenen_liste:
 
-			return 0
+				# Ebenen der betreffenden Hierarchie-Stufe herausfischen
+				if ebene.p[KEY_HIERARCHIEEBENE] == hierarchieebene:
 
-		# HOEHE: Meta - entspricht Schriftgröße
-		self.p[KEY_VERTIKAL][KEY_META] = PARAM_RAUM_SCHRIFTGROESSE
-		# HOEHE: Switches - höchster gewinnt
-		for switch in self.p[KEY_SWITCHES]:
-			if self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] < switch.svg[KEY_HOEHE]:
-				self.p[KEY_VERTIKAL][KEY_SWITCHEBENE] = switch.svg[KEY_HOEHE]
-
-		# HOEHE: Inter - Anzahl der Inter-Switch-Verbindungen plus Switch-Patchfeld-Verbindungen mal Abstand
-		self.p[KEY_VERTIKAL][KEY_INTER] = 0 # TODO
-
-		# HOEHE: Dosen - höchste gewinnt
-		for dosen in self.p[KEY_DOSEN]:
-			if self.p[KEY_VERTIKAL][KEY_DOSENEBENE] < dosen.svg[KEY_HOEHE]:
-				self.p[KEY_VERTIKAL][KEY_DOSENEBENE] = dosen.svg[KEY_HOEHE]
-		# HOEHE: Komponenten / Kinder - Summe ihrer Höhe plus Summe-1 mal Abstand
-		for kind in self.p[KEY_KINDER]:
-			self.p[KEY_VERTIKAL][KEY_KOMPONENTENEBENE] += kind.svg[KEY_HOEHE]
-		if len(self.p[KEY_KINDER]) > 1:
-			self.p[KEY_VERTIKAL][KEY_KOMPONENTENEBENE] += (len(self.p[KEY_KINDER]) - 1) * PARAM_ABSTAND
-
-		# BREITE: Knicke - Anzahl der Dosen mal Abstand
-		self.p[KEY_HORIZONTAL][KEY_KNICKE] = len(self.p[KEY_AUSGAENGE]) * PARAM_ABSTAND
-		# BREITE: Switches - Summe ihrer Breite plus Summe-1 mal Abstand
-		for switch in self.p[KEY_SWITCHES]:
-			self.p[KEY_HORIZONTAL][KEY_SWITCHEBENE] += switch.svg[KEY_BREITE]
-		if len(self.p[KEY_SWITCHES]) > 1:
-			self.p[KEY_HORIZONTAL][KEY_SWITCHEBENE] += (len(self.p[KEY_SWITCHES]) - 1) * PARAM_ABSTAND
-		# BREITE: Inter - Anzahl der Inter-Kinder-Verbindungen mal Abstand
-		self.p[KEY_HORIZONTAL][KEY_INTER] = 0 # TODO
-		# BREITE: Komponenten / Kinder - breitestes gewinnt
-		for kind in self.p[KEY_KINDER]:
-			if self.p[KEY_HORIZONTAL][KEY_KOMPONENTENEBENE] < kind.svg[KEY_BREITE]:
-				self.p[KEY_HORIZONTAL][KEY_KOMPONENTENEBENE] = kind.svg[KEY_BREITE]
-
-		# Horizontale Werte in globaler Tabelle notieren
-		for spalte in list(self.p[KEY_HORIZONTAL].keys()):
-			if self.p[KEY_MAX][self.p[KEY_HIERARCHIEEBENE]][spalte] < self.p[KEY_HORIZONTAL][spalte]:
-				self.p[KEY_MAX][self.p[KEY_HIERARCHIEEBENE]][spalte] = self.p[KEY_HORIZONTAL][spalte]
-
-
-	def __erstelle_meine_kinder__(self):
-
-		for ort in list(self.p[KEY_BAUM].keys()):
-			self.p[KEY_KINDER].append(darstellung_ebene({
-				KEY_NAME: ort,
-				KEY_ELTERN: self.p[KEY_NAME],
-				KEY_HIERARCHIEEBENE: PARAM_EBENEN[PARAM_EBENEN.index(self.p[KEY_HIERARCHIEEBENE]) + 1],
-				KEY_BAUM: self.p[KEY_BAUM][ort],
-				KEY_KOMPONENTEN: self.p[KEY_KOMPONENTEN],
-				KEY_VERBINDUNGEN: self.p[KEY_VERBINDUNGEN],
-				KEY_MAX: self.p[KEY_MAX]
-				}))
-
-
-	def __finde_meine_komponenten__(self):
-
-		# Durch alle Komponenten des Netzwerkes laufen
-		for komponente in list(self.p[KEY_KOMPONENTEN].keys()):
-
-			# Liegt dieses Element in meiner Ebene?
-			if self.p[KEY_KOMPONENTEN][komponente].p[KEY_HIERARCHIEEBENE] == self.p[KEY_HIERARCHIEEBENE]:
-
-				# Prüfung des Ortes ...
-				richtiger_ort = False
-
-				# Globales Element
-				if self.p[KEY_NAME] == PARAM_EBENEN[0]:
-
-					# Immer ein Treffer
-					richtiger_ort = True
-
-				# Element mit Standort
-				else:
-
-					# Gibt es die Ortsebene?
-					if self.p[KEY_HIERARCHIEEBENE] in self.p[KEY_KOMPONENTEN][komponente].p[KEY_ORT].keys():
-
-						# Richtiger Ort?
-						if self.p[KEY_KOMPONENTEN][komponente].p[KEY_ORT][self.p[KEY_HIERARCHIEEBENE]] == self.p[KEY_NAME]:
-
-							# Treffer
-							richtiger_ort = True
-
-				# Falls der Ort stimmt ...
-				if richtiger_ort:
-
-					# Switches, Hubs ... ?
-					if self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] in [KEY_SWITCH, KEY_HUB]: # TODO zuordnen
-
-						# In die Liste
-						self.p[KEY_SWITCHES].append(self.p[KEY_KOMPONENTEN][komponente])
-
-					# Ausgänge wie Dosen?
-					elif self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] in [KEY_DOSE, KEY_LOCH, KEY_VORBEREITET]: # TODO zuordnen
-
-						# Ist es eine Dose in der untersten Hierarchie-Ebene?
-						if self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] == KEY_DOSE and self.p[KEY_HIERARCHIEEBENE] != PARAM_EBENEN[-1]:
-
-							# In die Liste der Dosen
-							self.p[KEY_DOSEN].append(self.p[KEY_KOMPONENTEN][komponente])
-
-						else:
-
-							# Sonst in die Liste der Ausgänge
-							self.p[KEY_AUSGAENGE].append(self.p[KEY_KOMPONENTEN][komponente])
-
-					# Computer, Kopflos, ...
-					elif self.p[KEY_KOMPONENTEN][komponente].p[KEY_TYP] in [KEY_ARBEITSPLATZ, KEY_KOPFLOS, KEY_DRUCKER, KEY_SMARTPHONE]: # TODO zuordnen
-
-						# In die Liste der KINDER (!)
-						self.p[KEY_KINDER].append(self.p[KEY_KOMPONENTEN][komponente])
-
-					# Sonstiges
-					else:
-
-						pp(komponente.p)
-						raise
+					# Ebene rendern - falls sie etwas enthält
+					if len(ebene.p[KEY_SWITCHES]) > 0 or len(ebene.p[KEY_DOSEN]) > 0 or len(ebene.p[KEY_KINDER]) > 0 or len(ebene.p[KEY_AUSGAENGE]) > 0:
+						ebene.__rendere_mich_selbst__()
 
 
 	def __rendere_meine_komponenten__(self):
@@ -526,18 +488,56 @@ class darstellung_ebene(darstellung):
 				element.rendere_svg({})
 
 
-	def __baue_struktur_baum__(self):
+	def __zeichne_schnittstellen__(self, svg):
 
-		self.p[KEY_BAUM] = {}
+		for ding in (self.p[KEY_SWITCHES] + self.p[KEY_DOSEN] + self.p[KEY_KINDER] + self.p[KEY_AUSGAENGE]):
+			ding.__zeichne_schnittstellen__(svg)
 
-		# TODO rekursiv mit PARAM_EBENEN
-		for komponente in list(self.p[KEY_KOMPONENTEN].keys()):
 
-			ort = self.p[KEY_KOMPONENTEN][komponente].p[KEY_ORT]
+	def __zeichne_verbindungen__(self, svg):
 
-			if ort[KEY_STANDORT] != '' and ort[KEY_STANDORT] not in self.p[KEY_BAUM].keys():
-				self.p[KEY_BAUM][ort[KEY_STANDORT]] = {}
-			if ort[KEY_HAUS] != '' and ort[KEY_HAUS] not in self.p[KEY_BAUM][ort[KEY_STANDORT]].keys():
-				self.p[KEY_BAUM][ort[KEY_STANDORT]][ort[KEY_HAUS]] = {}
-			if ort[KEY_RAUM] != '' and ort[KEY_RAUM] not in self.p[KEY_BAUM][ort[KEY_STANDORT]][ort[KEY_HAUS]].keys():
-				self.p[KEY_BAUM][ort[KEY_STANDORT]][ort[KEY_HAUS]][ort[KEY_RAUM]] = {}
+		linie = '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="%d" stroke-linecap="round" />'
+
+		for verbindung in self.p[KEY_VERBINDUNGEN]:
+
+			orientierungen = []
+			for index in range(0, 2):
+				orientierungen.append(verbindung[KEY_VERBINDUNG][index][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_ORIENTIERUNG])
+
+			# Klassische 90°-Ecke in Kabel
+			if (
+				orientierungen[0] in [KEY_OBEN, KEY_UNTEN] and orientierungen[1] in [KEY_LINKS, KEY_RECHTS]
+				) or (
+				orientierungen[0] in [KEY_LINKS, KEY_RECHTS] and orientierungen[1] in [KEY_OBEN, KEY_UNTEN]
+				):
+
+				if orientierungen[0] in [KEY_OBEN, KEY_UNTEN]:
+					punkte = [
+						[0, 0, 0, 1],
+						[0, 1, 1, 1],
+						]
+				else:
+					punkte = [
+						[0, 0, 1, 0],
+						[1, 0, 1, 1]
+						]
+
+				for index in punkte:
+					svg.append(linie % (
+						verbindung[KEY_VERBINDUNG][index[0]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
+						verbindung[KEY_VERBINDUNG][index[1]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
+						verbindung[KEY_VERBINDUNG][index[2]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
+						verbindung[KEY_VERBINDUNG][index[3]][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
+						'#FF0000', 2
+						))
+
+			# Ein direktes Kabel - Rückfalloption für unbekannte Knick-Sequenzen
+			else:
+
+				svg.append(linie % (
+					verbindung[KEY_VERBINDUNG][0][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
+					verbindung[KEY_VERBINDUNG][0][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
+					verbindung[KEY_VERBINDUNG][1][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_X],
+					verbindung[KEY_VERBINDUNG][1][KEY_SCHNITTSTELLE].svg[KEY_STECKER][KEY_Y],
+					'#FF0000', 2
+					))
