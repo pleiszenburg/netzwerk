@@ -52,18 +52,11 @@ class darstellung_ebene(darstellung):
 
 		super().__init__(parameter)
 
-		# Standart-Parameter setzen, falls nichts vorhanden
-		if KEY_HIERARCHIEEBENE not in self.p.keys():
-			self.p[KEY_HIERARCHIEEBENE] = PARAM_EBENEN[0] # Global gibt es per Definition nur einmal
-		if KEY_ELTERN not in self.p.keys():
-			self.p[KEY_ELTERN] = KEY_UNDEFINIERT # Global hat undefinierte Eltern
-		if KEY_NAME not in self.p.keys():
-			self.p[KEY_NAME] = PARAM_EBENEN[0] # Trägt sonst den Namen von Standorten, Häusern, Räumen
-		if KEY_BAUM not in self.p.keys():
-			self.__baue_struktur_baum__()
-
-		# Basis-Struktur einer Ebene aufbauen
-		self.p.update({
+		# Standart-Parameter definieren
+		p_vorlage_dict = {
+			KEY_HIERARCHIEEBENE: PARAM_EBENEN[0], # Global gibt es per Definition nur einmal
+			KEY_ELTERN: KEY_UNDEFINIERT, # Global hat undefinierte Eltern
+			KEY_NAME: PARAM_EBENEN[0], # Trägt sonst den Namen von Standorten, Häusern, Räumen
 			KEY_TYP: KEY_DARSTELLUNG,
 			KEY_HORIZONTAL: { # Spaltenweise
 				KEY_KNICKE: 0,
@@ -83,7 +76,14 @@ class darstellung_ebene(darstellung):
 			KEY_DOSEN: [], # Dosen, die zu Patchfeldern auf Haus-, Standort- oder globaler Ebene gehören
 			KEY_KINDER: [], # Weitere Ebenen oder Komponenten
 			KEY_AUSGAENGE: [] # Dosen, sonstige Übergänge,
-			})
+			}
+
+		# Standart-Parameter setzen, falls nichts vorhanden
+		self.__vervollstaendige_dict__(self.p, p_vorlage_dict)
+
+		# Falls es noch keinen Baum gibt, diesen jetzt aufbauen
+		if KEY_BAUM not in self.p.keys():
+			self.__baue_struktur_baum__()
 
 		# Felder für horizontale Maxima hinzufügen, falls es keine Referenz gibt
 		if KEY_MAX not in self.p.keys():

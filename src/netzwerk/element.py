@@ -70,6 +70,13 @@ class element(object):
 		sorted(liste_elemente, key = lambda gegenstand: gegenstand.p[schluessel])
 
 
+	def __vervollstaendige_dict__(self, in_dict, default_dict):
+
+		for schluessel in default_dict.keys():
+			if schluessel not in in_dict.keys():
+				in_dict[schluessel] = default_dict[schluessel]
+
+
 	def __vervollstaendige_svg__(self, svg, globaler_kopf = False):
 
 		if globaler_kopf:
